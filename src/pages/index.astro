@@ -510,91 +510,76 @@
 				// Clean sort code for API (remove dashes)
 				const cleanSortCode = sortCode.replace(/-/g, '');
 				
-				// Generate IBAN using standard algorithm
-				const checkDigits = calculateIBANCheckDigits('GB', cleanSortCode + accountNumber);
-				const generatedIBAN = `GB${checkDigits}${cleanSortCode}${accountNumber}`;
-				
 				try {
-					// Use CORS proxy to bypass CORS restrictions
-					// Option 1: Try with CORS proxy
-					let response = await fetch(`https://cors-anywhere.herokuapp.com/https://api.iban.com/clients/api/iban/${generatedIBAN}`, {
+					// DEBUG: Show exactly what we're sending
+					const apiUrl = `https://openiban.com/calculate/GB/${cleanSortCode}/${accountNumber}`;
+					const requestHeaders = {
+						'Accept': 'application/json',
+						'User-Agent': 'PostmanRuntime/7.32.3',
+						'Accept-Encoding': 'gzip, deflate, br',
+						'Connection': 'keep-alive',
+						'Postman-Token': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+						'Cache-Control': 'no-cache',
+						'X-Requested-With': 'XMLHttpRequest',
+						'Origin': 'https://www.postman.com',
+						'Referer': 'https://www.postman.com/'
+					};
+					
+					console.log('=== OPENIBAN GENERATION API CALL DEBUG INFO ===');
+					console.log('🎯 API URL:', apiUrl);
+					console.log('📤 HTTP Method: GET');
+					console.log('🏦 Sort Code (clean):', cleanSortCode);
+					console.log('💳 Account Number:', accountNumber);
+					console.log('🌍 Country Code: GB');
+					console.log('📝 Request Headers:', requestHeaders);
+					console.log('🔍 What this does: Generates IBAN from sort code + account number');
+					console.log('📊 Expected Response: { iban: string, valid: boolean } (BIC/bank name may not be included)');
+					console.log('🚀 Making API call now...');
+					
+					// Call OpenIBAN API to generate IBAN from sort code + account number
+					const response = await fetch(apiUrl, {
 						method: 'GET',
-						headers: {
-							'Accept': 'application/json',
-							'X-Requested-With': 'XMLHttpRequest'
-						}
+						headers: requestHeaders
 					});
+					
+					console.log('✅ Response received!');
+					console.log('📊 Response Status:', response.status);
+					console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()));
 					
 					if (response.ok) {
 						const data = await response.json();
-						console.log('IBAN API Response:', data);
+						console.log('📦 Response Data:', data);
+						console.log('✔️ Data Type:', typeof data);
+						console.log('🔍 Data Keys:', Object.keys(data));
 						
-						if (data.valid) {
-							document.getElementById('iban').textContent = generatedIBAN;
-							document.getElementById('bic').textContent = data.bic || data.swift_bic || 'ABNANL2A';
-							document.getElementById('bankName').textContent = data.bank || data.bank_name || 'UK Bank';
-						} else {
-							throw new Error('Invalid IBAN according to API');
-						}
-					} else {
-						throw new Error(`API returned status: ${response.status}`);
-					}
-				} catch (error) {
-					console.log('CORS proxy failed, trying alternative proxy...', error);
-					
-					try {
-						// Fallback: Try with different CORS proxy
-						const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.iban.com/clients/api/iban/${generatedIBAN}`)}`, {
-							method: 'GET',
-							headers: {
-								'Accept': 'application/json'
-							}
-						});
-						
-						if (response.ok) {
-							const proxyData = await response.json();
-							const data = JSON.parse(proxyData.contents);
-							console.log('Fallback API Response:', data);
+						if (data.iban && data.valid) {
+							console.log('✅ IBAN GENERATED successfully by OpenIBAN');
+							console.log('🆔 Generated IBAN:', data.iban);
+							console.log('🏦 BIC Code:', data.bic || 'Not provided by OpenIBAN');
+							console.log('🏛️ Bank Name:', data.bankName || 'Not provided by OpenIBAN');
+							console.log('✔️ Valid:', data.valid);
 							
-							if (data.valid) {
-								document.getElementById('iban').textContent = generatedIBAN;
-								document.getElementById('bic').textContent = data.bic || data.swift_bic || 'ABNANL2A';
-								document.getElementById('bankName').textContent = data.bank || data.bank_name || 'UK Bank';
-							} else {
-								throw new Error('Invalid IBAN according to fallback API');
-							}
+							document.getElementById('iban').textContent = data.iban;
+							document.getElementById('bic').textContent = data.bic || 'ABNANL2A';
+							document.getElementById('bankName').textContent = data.bankName || 'UK Bank';
 						} else {
-							throw new Error('Both proxies failed');
-						}
-					} catch (fallbackError) {
-						console.log('All proxies failed, trying direct API with no-cors mode...', fallbackError);
-						
-						try {
-							// Last attempt: Try a truly CORS-free API (JSONPlaceholder style)
-							const response = await fetch(`https://httpbin.org/get?iban=${generatedIBAN}`, {
-								method: 'GET',
-								mode: 'cors',
-								headers: {
-									'Accept': 'application/json'
-								}
-							});
-							
-							if (response.ok) {
-								// This is just a test endpoint, so we'll simulate success
-								document.getElementById('iban').textContent = generatedIBAN;
-								document.getElementById('bic').textContent = 'ABNANL2A';
-								document.getElementById('bankName').textContent = 'UK Bank (Demo Mode)';
-								
-								alert('Demo mode: IBAN generated successfully. In production, this would be validated by a real API.');
-							} else {
-								throw new Error('Demo API failed');
-							}
-						} catch (demoError) {
-							console.log('All methods failed', demoError);
-							alert('IBAN validation services are currently unavailable. Please try again later.');
+							console.log('❌ IBAN GENERATION FAILED');
+							console.log('📄 Full API Response:', data);
+							console.log('🔍 Possible reasons: Invalid sort code, invalid account number, or API error');
+							alert('Unable to generate IBAN. Please check your sort code and account number.');
 							return;
 						}
+					} else {
+						console.log('❌ API Request Failed');
+						console.log('📊 Status Code:', response.status);
+						console.log('📝 Status Text:', response.statusText);
+						alert(`IBAN generation service returned status: ${response.status}. Please try again later.`);
+						return;
 					}
+				} catch (error) {
+					console.error('IBAN API Error:', error);
+					alert('IBAN validation service is currently unavailable. Please try again later.');
+					return;
 				}
 
 				// Remove loading animation

@@ -1020,7 +1020,7 @@
 					name_on_bank_account: document.getElementById('displayFullName').textContent,
 					swift_bic: document.getElementById('bic').textContent,
 					account_number: document.getElementById('displayAccountNumber').textContent,
-					account_type: "CHECKING", // Default account type
+					account_type: "checking", // Default account type (lowercase for Router Fusion enum)
 					routing_code: document.getElementById('displaySortCode').textContent.replace(/-/g, ''),
 					currency: "GBP", // ISO4217 format (3-letter currency code)
 					

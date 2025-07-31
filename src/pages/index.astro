@@ -118,6 +118,31 @@
 						<div class="info-value" id="userId">-</div>
 					</div>
 					
+					<div class="generated-info">
+						<div class="info-label">Branch</div>
+						<div class="info-value" id="branch">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Address</div>
+						<div class="info-value" id="address">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">City</div>
+						<div class="info-value" id="city">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Postal Code</div>
+						<div class="info-value" id="zip">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Phone</div>
+						<div class="info-value" id="phone">-</div>
+					</div>
+					
 					<button class="merchant-btn" onclick="createMerchant()">Create Merchant</button>
 				</div>
 			</div>
@@ -569,6 +594,13 @@
 						document.getElementById('iban').textContent = data.iban;
 						document.getElementById('bic').textContent = data.bic || 'N/A';
 						document.getElementById('bankName').textContent = data.bank || 'UK Bank';
+						
+						// Populate additional bank details
+						document.getElementById('branch').textContent = data.branch || 'N/A';
+						document.getElementById('address').textContent = data.address || 'N/A';
+						document.getElementById('city').textContent = data.city || 'N/A';
+						document.getElementById('zip').textContent = data.zip || 'N/A';
+						document.getElementById('phone').textContent = data.phone || 'N/A';
 					} else {
 						console.log('❌ IBAN GENERATION FAILED');
 						console.log('📄 Error:', data.error || 'Unknown error');
@@ -629,6 +661,11 @@
 				document.getElementById('displayAccountNumber').textContent = '-';
 				document.getElementById('displaySortCode').textContent = '-';
 				document.getElementById('userId').textContent = '-';
+				document.getElementById('branch').textContent = '-';
+				document.getElementById('address').textContent = '-';
+				document.getElementById('city').textContent = '-';
+				document.getElementById('zip').textContent = '-';
+				document.getElementById('phone').textContent = '-';
 			}
 
 			// Calculate BIC/SWIFT code from IBAN

@@ -511,35 +511,40 @@
 				const cleanSortCode = sortCode.replace(/-/g, '');
 				
 				try {
-					// DEBUG: Show exactly what we're sending
-					const apiUrl = `https://openiban.com/calculate/GB/${cleanSortCode}/${accountNumber}`;
-					const requestHeaders = {
-						'Accept': 'application/json',
-						'User-Agent': 'PostmanRuntime/7.32.3',
-						'Accept-Encoding': 'gzip, deflate, br',
-						'Connection': 'keep-alive',
-						'Postman-Token': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-						'Cache-Control': 'no-cache',
-						'X-Requested-With': 'XMLHttpRequest',
-						'Origin': 'https://www.postman.com',
-						'Referer': 'https://www.postman.com/'
+					// DEBUG: Show exactly what we're sending to our new IBAN service
+					const apiUrl = 'http://142.93.113.224/calculate-iban';
+					const requestPayload = {
+						country_code: 'GB',
+						bank_code: cleanSortCode,
+						account_number: accountNumber
 					};
 					
-					console.log('=== OPENIBAN GENERATION API CALL DEBUG INFO ===');
+					console.log('=== NEW IBAN SERVICE API CALL DEBUG INFO ===');
 					console.log('🎯 API URL:', apiUrl);
-					console.log('📤 HTTP Method: GET');
-					console.log('🏦 Sort Code (clean):', cleanSortCode);
+					console.log('📤 HTTP Method: POST');
+					console.log('🏦 Bank Code (Sort Code):', cleanSortCode);
 					console.log('💳 Account Number:', accountNumber);
 					console.log('🌍 Country Code: GB');
-					console.log('📝 Request Headers:', requestHeaders);
-					console.log('🔍 What this does: Generates IBAN from sort code + account number');
-					console.log('📊 Expected Response: { iban: string, valid: boolean } (BIC/bank name may not be included)');
+					console.log('📦 Request Payload:', requestPayload);
+					console.log('🔍 What this does: Generates IBAN and retrieves bank name');
+					console.log('📊 Expected Response: { iban: string, bank_name: string }');
 					console.log('🚀 Making API call now...');
 					
-					// Call OpenIBAN API to generate IBAN from sort code + account number
+					// Call our new IBAN calculation service with Postman-like headers
 					const response = await fetch(apiUrl, {
-						method: 'GET',
-						headers: requestHeaders
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'Accept': 'application/json',
+							'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+							'Accept-Encoding': 'gzip, deflate, br',
+							'Accept-Language': 'en-US,en;q=0.9',
+							'Cache-Control': 'no-cache',
+							'Pragma': 'no-cache'
+						},
+						mode: 'cors',
+						credentials: 'omit',
+						body: JSON.stringify(requestPayload)
 					});
 					
 					console.log('✅ Response received!');
@@ -552,16 +557,17 @@
 						console.log('✔️ Data Type:', typeof data);
 						console.log('🔍 Data Keys:', Object.keys(data));
 						
-						if (data.iban && data.valid) {
-							console.log('✅ IBAN GENERATED successfully by OpenIBAN');
+						if (data.iban && data.is_valid) {
+							console.log('✅ IBAN GENERATED successfully by our service');
 							console.log('🆔 Generated IBAN:', data.iban);
-							console.log('🏦 BIC Code:', data.bic || 'Not provided by OpenIBAN');
-							console.log('🏛️ Bank Name:', data.bankName || 'Not provided by OpenIBAN');
-							console.log('✔️ Valid:', data.valid);
+							console.log('🏛️ Bank Name:', data.bank_name || 'Bank name not provided');
+							console.log('✔️ Valid:', data.is_valid);
+							console.log('🔢 Check Digits:', data.check_digits);
+							console.log('🛠️ Method Used:', data.method_used);
 							
 							document.getElementById('iban').textContent = data.iban;
-							document.getElementById('bic').textContent = data.bic || 'ABNANL2A';
-							document.getElementById('bankName').textContent = data.bankName || 'UK Bank';
+							document.getElementById('bic').textContent = 'ABNANL2A'; // Default BIC for now
+							document.getElementById('bankName').textContent = data.bank_name || 'UK Bank';
 						} else {
 							console.log('❌ IBAN GENERATION FAILED');
 							console.log('📄 Full API Response:', data);
@@ -573,6 +579,8 @@
 						console.log('❌ API Request Failed');
 						console.log('📊 Status Code:', response.status);
 						console.log('📝 Status Text:', response.statusText);
+						const errorText = await response.text();
+						console.log('📝 Error Response:', errorText);
 						alert(`IBAN generation service returned status: ${response.status}. Please try again later.`);
 						return;
 					}

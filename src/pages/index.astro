@@ -60,6 +60,46 @@
 						<input type="text" class="form-input" id="sortCode" placeholder="XX-XX-XX">
 					</div>
 					
+					<div class="form-group">
+						<label class="form-label">Email</label>
+						<input type="email" class="form-input" id="email" placeholder="Enter your email address">
+					</div>
+					
+					<div class="form-group">
+						<label class="form-label">Phone</label>
+						<input type="tel" class="form-input" id="phone" placeholder="Enter your phone number">
+					</div>
+					
+					<div class="form-group">
+						<label class="form-label">Address</label>
+						<input type="text" class="form-input" id="address" placeholder="Enter your street address">
+					</div>
+					
+					<div class="form-group">
+						<label class="form-label">City</label>
+						<input type="text" class="form-input" id="city" placeholder="Enter your city">
+					</div>
+					
+					<div class="form-group">
+						<label class="form-label">State/Province/Region</label>
+						<input type="text" class="form-input" id="stateProvinceRegion" placeholder="Enter your state, province, or region">
+					</div>
+					
+					<div class="form-group">
+						<label class="form-label">Postal Code</label>
+						<input type="text" class="form-input" id="postalCode" placeholder="Enter your postal code">
+					</div>
+					
+					<div class="form-group">
+						<label class="form-label">Country</label>
+						<input type="text" class="form-input" id="country" placeholder="Enter your country">
+					</div>
+					
+					<div class="form-group">
+						<label class="form-label">Tax Number</label>
+						<input type="text" class="form-input" id="taxNumber" placeholder="Enter your tax number">
+					</div>
+					
 					<button class="generate-btn" onclick="generateDetails()">Generate Banking Details</button>
 				</div>
 
@@ -98,7 +138,63 @@
 					</div>
 					
 					<div class="generated-info">
-						<div class="info-value" id="reference">-</div>
+						<div class="info-label">Account Number</div>
+						<div class="info-value" id="displayAccountNumber">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Sort Code</div>
+						<div class="info-value" id="displaySortCode">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Entity ID</div>
+						<div class="info-value" id="entityId">Spark Tech Hub</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">User ID</div>
+						<div class="info-value" id="userId">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Email</div>
+						<div class="info-value" id="displayEmail">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Phone</div>
+						<div class="info-value" id="displayPhone">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Address</div>
+						<div class="info-value" id="displayAddress">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">City</div>
+						<div class="info-value" id="displayCity">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">State/Province/Region</div>
+						<div class="info-value" id="displayStateProvinceRegion">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Postal Code</div>
+						<div class="info-value" id="displayPostalCode">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Country</div>
+						<div class="info-value" id="displayCountry">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Tax Number</div>
+						<div class="info-value" id="displayTaxNumber">-</div>
 					</div>
 					
 					<button class="merchant-btn" onclick="createMerchant()">Create Merchant</button>
@@ -597,7 +693,19 @@
 
 				// Update other details
 				document.getElementById('accountHolder').textContent = `${firstName} ${lastName}`;
-				document.getElementById('reference').textContent = `REF${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+				document.getElementById('displayAccountNumber').textContent = accountNumber;
+				document.getElementById('displaySortCode').textContent = sortCode;
+				document.getElementById('userId').textContent = `USR${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+				
+				// Update additional personal information fields
+				document.getElementById('displayEmail').textContent = document.getElementById('email').value || '-';
+				document.getElementById('displayPhone').textContent = document.getElementById('phone').value || '-';
+				document.getElementById('displayAddress').textContent = document.getElementById('address').value || '-';
+				document.getElementById('displayCity').textContent = document.getElementById('city').value || '-';
+				document.getElementById('displayStateProvinceRegion').textContent = document.getElementById('stateProvinceRegion').value || '-';
+				document.getElementById('displayPostalCode').textContent = document.getElementById('postalCode').value || '-';
+				document.getElementById('displayCountry').textContent = document.getElementById('country').value || '-';
+				document.getElementById('displayTaxNumber').textContent = document.getElementById('taxNumber').value || '-';
 			}
 
 			// Create merchant functionality
@@ -627,7 +735,17 @@
 				document.getElementById('bic').textContent = '-';
 				document.getElementById('bankName').textContent = '-';
 				document.getElementById('accountHolder').textContent = '-';
-				document.getElementById('reference').textContent = '-';
+				document.getElementById('displayAccountNumber').textContent = '-';
+				document.getElementById('displaySortCode').textContent = '-';
+				document.getElementById('userId').textContent = '-';
+				document.getElementById('displayEmail').textContent = '-';
+				document.getElementById('displayPhone').textContent = '-';
+				document.getElementById('displayAddress').textContent = '-';
+				document.getElementById('displayCity').textContent = '-';
+				document.getElementById('displayStateProvinceRegion').textContent = '-';
+				document.getElementById('displayPostalCode').textContent = '-';
+				document.getElementById('displayCountry').textContent = '-';
+				document.getElementById('displayTaxNumber').textContent = '-';
 			}
 
 			// Calculate BIC/SWIFT code from IBAN

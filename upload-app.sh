@@ -31,11 +31,40 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
-# Check if node and npm are installed
+# Check if node and npm are installed, or if version is too old
+NODE_VERSION=""
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node -v | sed 's/v//')
+fi
+
+# Function to compare versions
+version_ge() {
+    printf '%s\n%s\n' "$2" "$1" | sort -V -C
+}
+
+# Check if we need to install/upgrade Node.js
+NEED_NODE_INSTALL=false
 if ! command -v node &> /dev/null; then
-    echo -e "${YELLOW}📦 Installing Node.js...${NC}"
-    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    echo -e "${YELLOW}📦 Node.js not found. Installing...${NC}"
+    NEED_NODE_INSTALL=true
+elif ! version_ge "$NODE_VERSION" "18.20.8"; then
+    echo -e "${YELLOW}📦 Node.js version $NODE_VERSION is too old. Upgrading to latest LTS...${NC}"
+    NEED_NODE_INSTALL=true
+else
+    echo -e "${GREEN}✅ Node.js version $NODE_VERSION is supported${NC}"
+fi
+
+if [ "$NEED_NODE_INSTALL" = true ]; then
+    # Remove old Node.js if present
+    apt-get remove -y nodejs npm 2>/dev/null || true
+    
+    # Install latest Node.js LTS (20.x)
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
     apt-get install -y nodejs
+    
+    # Verify installation
+    NEW_VERSION=$(node -v | sed 's/v//')
+    echo -e "${GREEN}✅ Node.js $NEW_VERSION installed successfully${NC}"
 fi
 
 # Build the app

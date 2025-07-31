@@ -654,7 +654,7 @@
 			}
 
 			// Create merchant functionality
-			function createMerchant() {
+			async function createMerchant() {
 				const accountHolder = document.getElementById('accountHolder').textContent;
 				const iban = document.getElementById('iban').textContent;
 				
@@ -663,7 +663,166 @@
 					return;
 				}
 				
-				alert(`Merchant account created successfully for ${accountHolder}!\n\nMerchant ID: MCH${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}\nIBAN: ${iban}\nStatus: Active`);
+				console.log('🚀 Starting merchant creation process...');
+				
+				try {
+					// Collect data from generated details
+					const merchantData = collectMerchantData();
+					
+					console.log('📦 Merchant Data Collected:', merchantData);
+					
+					// Call GraphQL mutation
+					const result = await createPersonalBeneficiary(merchantData);
+					
+					console.log('✅ Merchant created successfully:', result);
+					
+					alert(`Merchant account created successfully for ${accountHolder}!\n\nMerchant ID: ${result.id || 'Generated'}\nIBAN: ${iban}\nStatus: Active`);
+					
+				} catch (error) {
+					console.error('❌ Merchant creation failed:', error);
+					alert(`Failed to create merchant account: ${error.message}`);
+				}
+			}
+			
+			// Collect data from generated details for merchant creation
+			function collectMerchantData() {
+				return {
+					// Personal Information
+					user_id: document.getElementById('userId').textContent.replace('USR', ''), // Remove USR prefix
+					entity_id: document.getElementById('entityId').textContent,
+					email: document.getElementById('entityEmail').textContent,
+					phone: document.getElementById('phone').textContent !== '-' ? document.getElementById('phone').textContent : null,
+					first_name: document.getElementById('displayFirstName').textContent,
+					last_name: document.getElementById('displayLastName').textContent,
+					
+					// Personal Address (using bank address data)
+					address1: document.getElementById('address').textContent !== '-' ? document.getElementById('address').textContent : null,
+					address2: null,
+					city: document.getElementById('city').textContent !== '-' ? document.getElementById('city').textContent : null,
+					state_province_region: null,
+					postal_code: document.getElementById('zip').textContent !== '-' ? document.getElementById('zip').textContent : null,
+					country: "GBR", // ISO3166_1 format (3-letter country code)
+					tax_number: null, // TODO: Add to form if needed
+					
+					// Bank Account Information
+					name_on_bank_account: document.getElementById('displayFullName').textContent,
+					swift_bic: document.getElementById('bic').textContent,
+					account_number: document.getElementById('displayAccountNumber').textContent,
+					account_type: "CHECKING", // Default account type
+					routing_code: document.getElementById('displaySortCode').textContent.replace(/-/g, ''),
+					currency: "GBP", // ISO4217 format (3-letter currency code)
+					
+					// Bank Information
+					bank_name: document.getElementById('bankName').textContent,
+					branch_name: document.getElementById('branch').textContent !== '-' ? document.getElementById('branch').textContent : null,
+					bank_address1: document.getElementById('address').textContent !== '-' ? document.getElementById('address').textContent : null,
+					bank_address2: null,
+					bank_city: document.getElementById('city').textContent !== '-' ? document.getElementById('city').textContent : null,
+					bank_state_province_region: null,
+					bank_postal_code: document.getElementById('zip').textContent !== '-' ? document.getElementById('zip').textContent : null,
+					bank_country: "GBR" // ISO3166_1 format (3-letter country code)
+				};
+			}
+			
+			// GraphQL mutation function
+			async function createPersonalBeneficiary(data) {
+				const graphqlEndpoint = 'https://sandbox.external.routefusion.com/graphql';
+				
+				const mutation = `
+					mutation createPersonalBeneficiary (
+						$user_id: UUID!
+						$entity_id: UUID!
+						$email: Email!
+						$phone: String
+						$first_name: String!
+						$last_name: String!
+						$address1: String
+						$address2: String
+						$city: String
+						$state_province_region: String
+						$postal_code: PostalCode
+						$country: ISO3166_1!
+						$tax_number: TaxNumber
+						$name_on_bank_account: String
+						$swift_bic: SwiftBic
+						$account_number: BankAccountNumber
+						$account_type: AccountType
+						$routing_code: BankRoutingCode
+						$currency: ISO4217!
+						$bank_name: String
+						$branch_name: String
+						$bank_address1: String
+						$bank_address2: String
+						$bank_city: String
+						$bank_state_province_region: String
+						$bank_postal_code: PostalCode
+						$bank_country: ISO3166_1!
+					) {
+						createPersonalBeneficiary (
+							user_id: $user_id
+							entity_id: $entity_id
+							email: $email
+							phone: $phone
+							first_name: $first_name
+							last_name: $last_name
+							address1: $address1
+							address2: $address2
+							city: $city
+							state_province_region: $state_province_region
+							postal_code: $postal_code
+							country: $country
+							tax_number: $tax_number
+							name_on_bank_account: $name_on_bank_account
+							swift_bic: $swift_bic
+							account_number: $account_number
+							account_type: $account_type
+							routing_code: $routing_code
+							currency: $currency
+							bank_name: $bank_name
+							branch_name: $branch_name
+							bank_address1: $bank_address1
+							bank_address2: $bank_address2
+							bank_city: $bank_city
+							bank_state_province_region: $bank_state_province_region
+							bank_postal_code: $bank_postal_code
+							bank_country: $bank_country
+						)
+					}
+				`;
+				
+				const requestBody = {
+					query: mutation,
+					variables: data
+				};
+				
+				console.log('🌐 Sending GraphQL request to:', graphqlEndpoint);
+				console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+				
+				const response = await fetch(graphqlEndpoint, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						// TODO: Add authentication headers when available
+						// 'Authorization': 'Bearer YOUR_TOKEN'
+					},
+					body: JSON.stringify(requestBody)
+				});
+				
+				console.log('📡 Response status:', response.status);
+				
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				
+				const result = await response.json();
+				
+				console.log('📦 GraphQL response:', result);
+				
+				if (result.errors) {
+					throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
+				}
+				
+				return result.data.createPersonalBeneficiary;
 			}
 
 			// Helper functions for dev message

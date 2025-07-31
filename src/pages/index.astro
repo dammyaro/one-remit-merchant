@@ -879,7 +879,8 @@
 				document.getElementById('accountHolder').textContent = fullName;
 				document.getElementById('displayAccountNumber').textContent = accountNumber;
 				document.getElementById('displaySortCode').textContent = sortCode;
-				document.getElementById('userId').textContent = `USR${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+				// Generate a proper UUID v4 for Router Fusion API
+				document.getElementById('userId').textContent = generateUUID();
 			}
 
 			// Create merchant functionality
@@ -999,7 +1000,7 @@
 			function collectMerchantData() {
 				return {
 					// Personal Information
-					user_id: document.getElementById('userId').textContent.replace('USR', ''), // Remove USR prefix
+					user_id: document.getElementById('userId').textContent, // Now a proper UUID
 					entity_id: document.getElementById('entityId').textContent,
 					email: document.getElementById('entityEmail').textContent,
 					phone: document.getElementById('phone').textContent !== '-' ? document.getElementById('phone').textContent : null,
@@ -1132,6 +1133,14 @@
 				}
 				
 				return result.data.createPersonalBeneficiary;
+			}
+
+			// Generate UUID v4 function
+			function generateUUID() {
+				return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+					var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+					return v.toString(16);
+				});
 			}
 
 			// Helper functions for dev message

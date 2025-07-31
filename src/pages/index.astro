@@ -936,6 +936,9 @@
 						}
 					);
 					
+					// Reset forms after successful creation
+					resetForms();
+					
 				} catch (error) {
 					console.error('❌ Beneficiary creation failed:', error);
 					
@@ -999,6 +1002,35 @@
 			// Close modal
 			function closeModal() {
 				document.getElementById('resultModal').style.display = 'none';
+			}
+			
+			// Make closeModal globally accessible
+			window.closeModal = closeModal;
+			
+			// Reset all forms and generated details
+			function resetForms() {
+				// Reset input forms
+				document.getElementById('fullName').value = '';
+				document.getElementById('accountNumber').value = '';
+				document.getElementById('sortCode').value = '';
+				
+				// Reset all generated details to default state
+				document.getElementById('iban').textContent = '-';
+				document.getElementById('bankName').textContent = '-';
+				document.getElementById('bic').textContent = '-';
+				document.getElementById('branch').textContent = '-';
+				document.getElementById('displayFullName').textContent = '-';
+				document.getElementById('displayFirstName').textContent = '-';
+				document.getElementById('displayLastName').textContent = '-';
+				document.getElementById('accountHolder').textContent = '-';
+				document.getElementById('displayAccountNumber').textContent = '-';
+				document.getElementById('displaySortCode').textContent = '-';
+				document.getElementById('address').textContent = '-';
+				document.getElementById('city').textContent = '-';
+				document.getElementById('zip').textContent = '-';
+				document.getElementById('phone').textContent = '-';
+				
+				console.log('✅ Forms and generated details reset');
 			}
 			
 			// Close modal when clicking outside

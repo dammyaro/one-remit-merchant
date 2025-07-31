@@ -61,46 +61,6 @@
 						<input type="text" class="form-input" id="sortCode" placeholder="XX-XX-XX">
 					</div>
 					
-					<div class="form-group">
-						<label class="form-label">Email</label>
-						<input type="email" class="form-input" id="email" placeholder="Enter your email address">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">Phone</label>
-						<input type="tel" class="form-input" id="phone" placeholder="Enter your phone number">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">Address</label>
-						<input type="text" class="form-input" id="address" placeholder="Enter your street address">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">City</label>
-						<input type="text" class="form-input" id="city" placeholder="Enter your city">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">State/Province/Region</label>
-						<input type="text" class="form-input" id="stateProvinceRegion" placeholder="Enter your state, province, or region">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">Postal Code</label>
-						<input type="text" class="form-input" id="postalCode" placeholder="Enter your postal code">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">Country</label>
-						<input type="text" class="form-input" id="country" placeholder="Enter your country">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">Tax Number</label>
-						<input type="text" class="form-input" id="taxNumber" placeholder="Enter your tax number">
-					</div>
-					
 					<button class="generate-btn" onclick="generateDetails()">Generate Banking Details</button>
 				</div>
 
@@ -156,46 +116,6 @@
 					<div class="generated-info">
 						<div class="info-label">User ID</div>
 						<div class="info-value" id="userId">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">Email</div>
-						<div class="info-value" id="displayEmail">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">Phone</div>
-						<div class="info-value" id="displayPhone">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">Address</div>
-						<div class="info-value" id="displayAddress">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">City</div>
-						<div class="info-value" id="displayCity">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">State/Province/Region</div>
-						<div class="info-value" id="displayStateProvinceRegion">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">Postal Code</div>
-						<div class="info-value" id="displayPostalCode">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">Country</div>
-						<div class="info-value" id="displayCountry">-</div>
-					</div>
-					
-					<div class="generated-info">
-						<div class="info-label">Tax Number</div>
-						<div class="info-value" id="displayTaxNumber">-</div>
 					</div>
 					
 					<button class="merchant-btn" onclick="createMerchant()">Create Merchant</button>
@@ -608,45 +528,27 @@
 				const cleanSortCode = sortCode.replace(/-/g, '');
 				
 				try {
-					// DEBUG: Show exactly what we're sending to our new IBAN service
-					const apiUrl = 'http://142.93.113.224/calculate-iban';
-					const requestPayload = {
-						country_code: 'GB',
-						bank_code: cleanSortCode,
-						account_number: accountNumber
-					};
+					// Direct API call to iban.com
+					const apiUrl = `https://api.iban.com/clients/api/calc-api.php?api_key=3f8c0989988cead164d141f61c221286&format=json&country=GB&bankcode=${cleanSortCode}&account=${accountNumber}`;
 					
-					console.log('=== NEW IBAN SERVICE API CALL DEBUG INFO ===');
+					console.log('=== IBAN API CALL ===');
 					console.log('🎯 API URL:', apiUrl);
-					console.log('📤 HTTP Method: POST');
+					console.log('📤 HTTP Method: GET');
 					console.log('🏦 Bank Code (Sort Code):', cleanSortCode);
 					console.log('💳 Account Number:', accountNumber);
 					console.log('🌍 Country Code: GB');
-					console.log('📦 Request Payload:', requestPayload);
-					console.log('🔍 What this does: Generates IBAN and retrieves bank name');
-					console.log('📊 Expected Response: { iban: string, bank_name: string }');
 					console.log('🚀 Making API call now...');
 					
-					// Call our new IBAN calculation service with Postman-like headers
+					// Call iban.com API directly
 					const response = await fetch(apiUrl, {
-						method: 'POST',
+						method: 'GET',
 						headers: {
-							'Content-Type': 'application/json',
 							'Accept': 'application/json',
-							'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-							'Accept-Encoding': 'gzip, deflate, br',
-							'Accept-Language': 'en-US,en;q=0.9',
-							'Cache-Control': 'no-cache',
-							'Pragma': 'no-cache'
-						},
-						mode: 'cors',
-						credentials: 'omit',
-						body: JSON.stringify(requestPayload)
+						}
 					});
 					
 					console.log('✅ Response received!');
 					console.log('📊 Response Status:', response.status);
-					console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()));
 					
 					if (response.ok) {
 						const data = await response.json();
@@ -654,21 +556,19 @@
 						console.log('✔️ Data Type:', typeof data);
 						console.log('🔍 Data Keys:', Object.keys(data));
 						
-						if (data.iban && data.is_valid) {
-							console.log('✅ IBAN GENERATED successfully by our service');
+						if (data.iban) {
+							console.log('✅ IBAN GENERATED successfully');
 							console.log('🆔 Generated IBAN:', data.iban);
-							console.log('🏛️ Bank Name:', data.bank_name || 'Bank name not provided');
-							console.log('✔️ Valid:', data.is_valid);
-							console.log('🔢 Check Digits:', data.check_digits);
-							console.log('🛠️ Method Used:', data.method_used);
+							console.log('🏛️ Bank Name:', data.bank || 'Bank name not provided');
+							console.log('🏦 BIC:', data.bic || 'BIC not provided');
+							console.log('🏢 Branch:', data.branch || 'Branch not provided');
 							
 							document.getElementById('iban').textContent = data.iban;
-							document.getElementById('bic').textContent = calculateBICFromIBAN(data.iban);
-							document.getElementById('bankName').textContent = data.bank_name || 'UK Bank';
+							document.getElementById('bic').textContent = data.bic || 'N/A';
+							document.getElementById('bankName').textContent = data.bank || 'UK Bank';
 						} else {
 							console.log('❌ IBAN GENERATION FAILED');
 							console.log('📄 Full API Response:', data);
-							console.log('🔍 Possible reasons: Invalid sort code, invalid account number, or API error');
 							alert('Unable to generate IBAN. Please check your sort code and account number.');
 							return;
 						}
@@ -686,20 +586,7 @@
 					console.error('Error type:', error.name);
 					console.error('Error message:', error.message);
 					
-					// Check if it's a network error
-					if (error.name === 'TypeError' || (error.message && error.message.includes('Failed to fetch'))) {
-						const userChoice = confirm('Network Error: Unable to connect to IBAN service.\n\nClick OK to use fallback IBAN generation, or Cancel to try again later.');
-						if (userChoice) {
-							// Use fallback generation
-							console.log('Using fallback IBAN generation due to network error');
-							const fallbackIban = `GB${Math.floor(Math.random() * 90) + 10}${sortCode.replace(/-/g, '')}${accountNumber}`;
-							document.getElementById('iban').textContent = fallbackIban;
-							document.getElementById('bic').textContent = calculateBICFromIBAN(fallbackIban);
-							document.getElementById('bankName').textContent = 'UK Bank (Fallback)';
-						}
-					} else {
-						alert('IBAN validation service is currently unavailable. Please try again later.');
-					}
+					alert('IBAN validation service is currently unavailable. Please try again later.');
 					return;
 				}
 
@@ -713,16 +600,6 @@
 				document.getElementById('displayAccountNumber').textContent = accountNumber;
 				document.getElementById('displaySortCode').textContent = sortCode;
 				document.getElementById('userId').textContent = `USR${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
-				
-				// Update additional personal information fields
-				document.getElementById('displayEmail').textContent = document.getElementById('email').value || '-';
-				document.getElementById('displayPhone').textContent = document.getElementById('phone').value || '-';
-				document.getElementById('displayAddress').textContent = document.getElementById('address').value || '-';
-				document.getElementById('displayCity').textContent = document.getElementById('city').value || '-';
-				document.getElementById('displayStateProvinceRegion').textContent = document.getElementById('stateProvinceRegion').value || '-';
-				document.getElementById('displayPostalCode').textContent = document.getElementById('postalCode').value || '-';
-				document.getElementById('displayCountry').textContent = document.getElementById('country').value || '-';
-				document.getElementById('displayTaxNumber').textContent = document.getElementById('taxNumber').value || '-';
 			}
 
 			// Create merchant functionality
@@ -755,14 +632,6 @@
 				document.getElementById('displayAccountNumber').textContent = '-';
 				document.getElementById('displaySortCode').textContent = '-';
 				document.getElementById('userId').textContent = '-';
-				document.getElementById('displayEmail').textContent = '-';
-				document.getElementById('displayPhone').textContent = '-';
-				document.getElementById('displayAddress').textContent = '-';
-				document.getElementById('displayCity').textContent = '-';
-				document.getElementById('displayStateProvinceRegion').textContent = '-';
-				document.getElementById('displayPostalCode').textContent = '-';
-				document.getElementById('displayCountry').textContent = '-';
-				document.getElementById('displayTaxNumber').textContent = '-';
 			}
 
 			// Calculate BIC/SWIFT code from IBAN

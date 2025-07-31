@@ -518,7 +518,7 @@
                         // Use real IBAN from our service
                         console.log('Generated IBAN:', data.iban, 'Bank:', data.bank_name);
                         document.getElementById('iban').textContent = data.iban;
-                        document.getElementById('bic').textContent = 'ABNANL2A'; // Default BIC for now
+                        document.getElementById('bic').textContent = calculateBICFromIBAN(data.iban);
                         document.getElementById('bankName').textContent = data.bank_name || 'UK Bank';
                     } else {
                         throw new Error('Invalid account details');
@@ -531,7 +531,7 @@
                 // Fallback to mock generation for GBP
                 const iban = `GB${Math.floor(Math.random() * 90) + 10}${sortCode.replace(/-/g, '')}${accountNumber}`;
                 document.getElementById('iban').textContent = iban;
-                document.getElementById('bic').textContent = 'ABNANL2A';
+                document.getElementById('bic').textContent = calculateBICFromIBAN(iban);
                 document.getElementById('bankName').textContent = 'Royal Bank of Scotland';
             }
 
@@ -573,6 +573,30 @@
 
         function hideDevMessage() {
             document.getElementById('devMessage').style.display = 'none';
+        }
+
+        // Calculate BIC/SWIFT code from IBAN
+        function calculateBICFromIBAN(iban) {
+            if (!iban || iban.length < 8) {
+                return 'UNKNOWN';
+            }
+            
+            // Extract components from IBAN
+            const countryCode = iban.substring(0, 2);  // GB
+            const checkDigits = iban.substring(2, 4);  // 20
+            const bankCode = iban.substring(4, 8);     // HLFX
+            
+            // BIC format: {bank_code}{country_code}{check_digits}
+            const bic = bankCode + countryCode + checkDigits;
+            
+            console.log('🏦 BIC Calculation:');
+            console.log('📄 IBAN:', iban);
+            console.log('🌍 Country Code:', countryCode);
+            console.log('🔢 Check Digits:', checkDigits);
+            console.log('🏛️ Bank Code:', bankCode);
+            console.log('🆔 Generated BIC:', bic);
+            
+            return bic;
         }
 
         function clearGeneratedDetails() {

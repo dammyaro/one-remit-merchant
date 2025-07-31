@@ -566,7 +566,7 @@
 							console.log('🛠️ Method Used:', data.method_used);
 							
 							document.getElementById('iban').textContent = data.iban;
-							document.getElementById('bic').textContent = 'ABNANL2A'; // Default BIC for now
+							document.getElementById('bic').textContent = calculateBICFromIBAN(data.iban);
 							document.getElementById('bankName').textContent = data.bank_name || 'UK Bank';
 						} else {
 							console.log('❌ IBAN GENERATION FAILED');
@@ -628,6 +628,30 @@
 				document.getElementById('bankName').textContent = '-';
 				document.getElementById('accountHolder').textContent = '-';
 				document.getElementById('reference').textContent = '-';
+			}
+
+			// Calculate BIC/SWIFT code from IBAN
+			function calculateBICFromIBAN(iban) {
+				if (!iban || iban.length < 8) {
+					return 'UNKNOWN';
+				}
+				
+				// Extract components from IBAN
+				const countryCode = iban.substring(0, 2);  // GB
+				const checkDigits = iban.substring(2, 4);  // 20
+				const bankCode = iban.substring(4, 8);     // HLFX
+				
+				// BIC format: {bank_code}{country_code}{check_digits}
+				const bic = bankCode + countryCode + checkDigits;
+				
+				console.log('🏦 BIC Calculation:');
+				console.log('📄 IBAN:', iban);
+				console.log('🌍 Country Code:', countryCode);
+				console.log('🔢 Check Digits:', checkDigits);
+				console.log('🏛️ Bank Code:', bankCode);
+				console.log('🆔 Generated BIC:', bic);
+				
+				return bic;
 			}
 
 			// IBAN check digit calculation function (ISO 13616 standard)

@@ -55,16 +55,53 @@ else
 fi
 
 if [ "$NEED_NODE_INSTALL" = true ]; then
-    # Remove old Node.js if present
-    apt-get remove -y nodejs npm 2>/dev/null || true
+    echo -e "${BLUE}🧹 Cleaning up old Node.js installation...${NC}"
+    
+    # Remove all Node.js related packages completely
+    apt-get remove -y nodejs npm libnode-dev libnode72 node-* 2>/dev/null || true
+    apt-get purge -y nodejs npm libnode-dev libnode72 node-* 2>/dev/null || true
+    apt-get autoremove -y 2>/dev/null || true
+    
+    # Clean package cache
+    apt-get clean
+    
+    # Remove any leftover files
+    rm -rf /usr/include/node* 2>/dev/null || true
+    rm -rf /usr/lib/node* 2>/dev/null || true
+    rm -rf /usr/share/nodejs* 2>/dev/null || true
+    
+    echo -e "${BLUE}📦 Installing fresh Node.js 20.x LTS...${NC}"
+    
+    # Update package lists
+    apt-get update
     
     # Install latest Node.js LTS (20.x)
     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    apt-get install -y nodejs
+    
+    # Force install to override conflicts
+    apt-get install -y --fix-broken nodejs
+    
+    # If that fails, try with force overwrite
+    if [ $? -ne 0 ]; then
+        echo -e "${YELLOW}⚠️  Forcing installation to resolve conflicts...${NC}"
+        dpkg --configure -a
+        apt-get install -y -o Dpkg::Options::="--force-overwrite" nodejs
+    fi
     
     # Verify installation
-    NEW_VERSION=$(node -v | sed 's/v//')
-    echo -e "${GREEN}✅ Node.js $NEW_VERSION installed successfully${NC}"
+    if command -v node &> /dev/null; then
+        NEW_VERSION=$(node -v | sed 's/v//')
+        echo -e "${GREEN}✅ Node.js $NEW_VERSION installed successfully${NC}"
+        
+        # Also show npm version
+        if command -v npm &> /dev/null; then
+            NPM_VERSION=$(npm -v)
+            echo -e "${GREEN}✅ npm $NPM_VERSION installed successfully${NC}"
+        fi
+    else
+        echo -e "${RED}❌ Node.js installation failed${NC}"
+        exit 1
+    fi
 fi
 
 # Build the app

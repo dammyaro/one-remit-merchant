@@ -42,13 +42,8 @@
 					<h2 class="section-title">Account Information</h2>
 					
 					<div class="form-group">
-						<label class="form-label">First Name</label>
-						<input type="text" class="form-input" id="firstName" placeholder="Enter your first name">
-					</div>
-					
-					<div class="form-group">
-						<label class="form-label">Last Name</label>
-						<input type="text" class="form-input" id="lastName" placeholder="Enter your last name">
+						<label class="form-label">Full Name</label>
+						<input type="text" class="form-input" id="fullName" placeholder="Enter your full name">
 					</div>
 					
 					<div class="form-group">
@@ -94,6 +89,21 @@
 					</div>
 					
 					<div class="generated-info">
+						<div class="info-label">Full Name</div>
+						<div class="info-value" id="displayFullName">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">First Name</div>
+						<div class="info-value" id="displayFirstName">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Last Name</div>
+						<div class="info-value" id="displayLastName">-</div>
+					</div>
+					
+					<div class="generated-info">
 						<div class="info-label">Account Holder</div>
 						<div class="info-value" id="accountHolder">-</div>
 					</div>
@@ -110,12 +120,17 @@
 					
 					<div class="generated-info">
 						<div class="info-label">Entity ID</div>
-						<div class="info-value" id="entityId">Spark Tech Hub</div>
+						<div class="info-value" id="entityId">sparktech-test-entity-id</div>
 					</div>
 					
 					<div class="generated-info">
 						<div class="info-label">User ID</div>
 						<div class="info-value" id="userId">-</div>
+					</div>
+					
+					<div class="generated-info">
+						<div class="info-label">Email</div>
+						<div class="info-value" id="entityEmail">business@sparktechs.ca</div>
 					</div>
 					
 					<div class="generated-info">
@@ -524,15 +539,19 @@
 
 			// Generate banking details with real IBAN API for GBP
 			async function generateDetails() {
-				const firstName = document.getElementById('firstName').value;
-				const lastName = document.getElementById('lastName').value;
-				const accountNumber = document.getElementById('accountNumber').value;
-				const sortCode = document.getElementById('sortCode').value;
+				const fullName = document.getElementById('fullName').value.trim();
+				const accountNumber = document.getElementById('accountNumber').value.trim();
+				const sortCode = document.getElementById('sortCode').value.trim();
 
-				if (!firstName || !lastName || !accountNumber || !sortCode) {
-					alert('Please fill in all fields');
+				if (!fullName || !accountNumber || !sortCode) {
+					alert('Please fill in all required fields');
 					return;
 				}
+				
+				// Split full name into first and last name
+				const nameParts = fullName.split(' ');
+				const firstName = nameParts[0] || '';
+				const lastName = nameParts.slice(1).join(' ') || '';
 
 				if (selectedCurrency !== 'GBP') {
 					alert('Currently only British Pounds (GBP) is supported');
@@ -625,7 +644,10 @@
 				document.getElementById('bankName').classList.remove('loading');
 
 				// Update other details
-				document.getElementById('accountHolder').textContent = `${firstName} ${lastName}`;
+				document.getElementById('displayFullName').textContent = fullName;
+				document.getElementById('displayFirstName').textContent = firstName || 'N/A';
+				document.getElementById('displayLastName').textContent = lastName || 'N/A';
+				document.getElementById('accountHolder').textContent = fullName;
 				document.getElementById('displayAccountNumber').textContent = accountNumber;
 				document.getElementById('displaySortCode').textContent = sortCode;
 				document.getElementById('userId').textContent = `USR${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
@@ -657,6 +679,9 @@
 				document.getElementById('iban').textContent = '-';
 				document.getElementById('bic').textContent = '-';
 				document.getElementById('bankName').textContent = '-';
+				document.getElementById('displayFullName').textContent = '-';
+				document.getElementById('displayFirstName').textContent = '-';
+				document.getElementById('displayLastName').textContent = '-';
 				document.getElementById('accountHolder').textContent = '-';
 				document.getElementById('displayAccountNumber').textContent = '-';
 				document.getElementById('displaySortCode').textContent = '-';

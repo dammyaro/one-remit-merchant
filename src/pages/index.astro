@@ -528,57 +528,54 @@
 				const cleanSortCode = sortCode.replace(/-/g, '');
 				
 				try {
-					// Direct API call to iban.com
-					const apiUrl = `https://api.iban.com/clients/api/calc-api.php?api_key=3f8c0989988cead164d141f61c221286&format=json&country=GB&bankcode=${cleanSortCode}&account=${accountNumber}`;
+					// Call Vercel function to avoid CORS issues
+					const apiUrl = '/api/iban';
 					
-					console.log('=== IBAN API CALL ===');
+					console.log('=== VERCEL FUNCTION API CALL ===');
 					console.log('🎯 API URL:', apiUrl);
-					console.log('📤 HTTP Method: GET');
+					console.log('📤 HTTP Method: POST');
 					console.log('🏦 Bank Code (Sort Code):', cleanSortCode);
 					console.log('💳 Account Number:', accountNumber);
 					console.log('🌍 Country Code: GB');
 					console.log('🚀 Making API call now...');
 					
-					// Call iban.com API directly
+					// Call Vercel function
 					const response = await fetch(apiUrl, {
-						method: 'GET',
+						method: 'POST',
 						headers: {
-							'Accept': 'application/json',
-						}
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							sortCode: sortCode,
+							accountNumber: accountNumber
+						})
 					});
 					
 					console.log('✅ Response received!');
 					console.log('📊 Response Status:', response.status);
 					
-					if (response.ok) {
-						const data = await response.json();
-						console.log('📦 Response Data:', data);
-						console.log('✔️ Data Type:', typeof data);
-						console.log('🔍 Data Keys:', Object.keys(data));
+					const data = await response.json();
+					console.log('📦 Response Data:', data);
+					console.log('✔️ Data Type:', typeof data);
+					console.log('🔍 Data Keys:', Object.keys(data));
+					
+					if (response.ok && data.success) {
+						console.log('✅ IBAN GENERATED successfully via Vercel function');
+						console.log('🆔 Generated IBAN:', data.iban);
+						console.log('🏛️ Bank Name:', data.bank || 'Bank name not provided');
+						console.log('🏦 BIC:', data.bic || 'BIC not provided');
+						console.log('🏢 Branch:', data.branch || 'Branch not provided');
 						
-						if (data.iban) {
-							console.log('✅ IBAN GENERATED successfully');
-							console.log('🆔 Generated IBAN:', data.iban);
-							console.log('🏛️ Bank Name:', data.bank || 'Bank name not provided');
-							console.log('🏦 BIC:', data.bic || 'BIC not provided');
-							console.log('🏢 Branch:', data.branch || 'Branch not provided');
-							
-							document.getElementById('iban').textContent = data.iban;
-							document.getElementById('bic').textContent = data.bic || 'N/A';
-							document.getElementById('bankName').textContent = data.bank || 'UK Bank';
-						} else {
-							console.log('❌ IBAN GENERATION FAILED');
-							console.log('📄 Full API Response:', data);
-							alert('Unable to generate IBAN. Please check your sort code and account number.');
-							return;
-						}
+						document.getElementById('iban').textContent = data.iban;
+						document.getElementById('bic').textContent = data.bic || 'N/A';
+						document.getElementById('bankName').textContent = data.bank || 'UK Bank';
 					} else {
-						console.log('❌ API Request Failed');
-						console.log('📊 Status Code:', response.status);
-						console.log('📝 Status Text:', response.statusText);
-						const errorText = await response.text();
-						console.log('📝 Error Response:', errorText);
-						alert(`IBAN generation service returned status: ${response.status}. Please try again later.`);
+						console.log('❌ IBAN GENERATION FAILED');
+						console.log('📄 Error:', data.error || 'Unknown error');
+						console.log('📝 Message:', data.message || 'No message provided');
+						
+						const errorMessage = data.message || data.error || 'Unable to generate IBAN. Please check your sort code and account number.';
+						alert(errorMessage);
 						return;
 					}
 				} catch (error) {

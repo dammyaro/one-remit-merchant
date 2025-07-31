@@ -492,7 +492,7 @@
                 const cleanSortCode = sortCode.replace(/-/g, '');
                 
                 // Call our new IBAN calculation service
-                const response = await fetch('https://142.93.113.224/calculate-iban', {
+                const response = await fetch('http://142.93.113.224/calculate-iban', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -609,7 +609,7 @@
 				
 				try {
 					// DEBUG: Show exactly what we're sending to our new IBAN service
-					const apiUrl = 'https://142.93.113.224/calculate-iban';
+					const apiUrl = 'http://142.93.113.224/calculate-iban';
 					const requestPayload = {
 						country_code: 'GB',
 						bank_code: cleanSortCode,
@@ -686,16 +686,12 @@
 					console.error('Error type:', error.name);
 					console.error('Error message:', error.message);
 					
-					// Check if it's a certificate/SSL error or network error (which often indicates cert issues)
-					if (error.name === 'TypeError' || 
-						(error.message && (error.message.includes('certificate') || error.message.includes('SSL') || error.message.includes('CERT') || error.message.includes('INVALID') || error.message.includes('ERR_CERT_AUTHORITY_INVALID') || error.message.includes('Failed to fetch')))) {
-						const userChoice = confirm('SSL Certificate Error: The server is using a self-signed certificate.\n\nClick OK to open the API endpoint in a new tab where you can accept the certificate, then try again.\n\nClick Cancel to use fallback mode.');
+					// Check if it's a network error
+					if (error.name === 'TypeError' || (error.message && error.message.includes('Failed to fetch'))) {
+						const userChoice = confirm('Network Error: Unable to connect to IBAN service.\n\nClick OK to use fallback IBAN generation, or Cancel to try again later.');
 						if (userChoice) {
-							window.open('https://142.93.113.224/calculate-iban', '_blank');
-							return;
-						} else {
 							// Use fallback generation
-							console.log('Using fallback IBAN generation due to SSL certificate issue');
+							console.log('Using fallback IBAN generation due to network error');
 							const fallbackIban = `GB${Math.floor(Math.random() * 90) + 10}${sortCode.replace(/-/g, '')}${accountNumber}`;
 							document.getElementById('iban').textContent = fallbackIban;
 							document.getElementById('bic').textContent = calculateBICFromIBAN(fallbackIban);

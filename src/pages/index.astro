@@ -38,6 +38,20 @@
 					<h2 class="section-title">Account Information</h2>
 					
 					<div class="form-group">
+						<label class="form-label">Auto-Fill from Text (Optional)</label>
+						<textarea 
+							class="form-input auto-parse-textarea" 
+							id="autoParseText" 
+							placeholder=""
+							rows="4"
+							oninput="parseAccountDetails()"
+						></textarea>
+						<div class="auto-parse-hint">
+							<small>💡 Paste any text containing name, account number, and sort code - we'll extract the details automatically</small>
+						</div>
+					</div>
+					
+					<div class="form-group">
 						<label class="form-label">Full Name</label>
 						<input type="text" class="form-input" id="fullName" placeholder="Enter your full name">
 					</div>
@@ -335,6 +349,25 @@
 				border-color: #667eea;
 				background: #111;
 				box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+			}
+
+			.auto-parse-textarea {
+				resize: vertical;
+				min-height: 80px;
+				font-family: 'Inter', sans-serif;
+				line-height: 1.4;
+			}
+
+			.auto-parse-hint {
+				margin-top: 0.5rem;
+			}
+
+			.auto-parse-hint small {
+				color: #888;
+				font-size: 0.8rem;
+				display: flex;
+				align-items: center;
+				gap: 0.3rem;
 			}
 
 			.generate-btn, .merchant-btn {
@@ -777,6 +810,7 @@
 				// Make functions globally available
 				window.generateDetails = generateDetails;
 				window.createMerchant = createMerchant;
+				window.parseAccountDetails = parseAccountDetails;
 			});
 
 			// Generate banking details with real IBAN API for GBP
@@ -1213,6 +1247,148 @@
 				document.getElementById('city').textContent = '-';
 				document.getElementById('zip').textContent = '-';
 				document.getElementById('phone').textContent = '-';
+			}
+
+			// Parse account details from text input
+			function parseAccountDetails() {
+				const text = document.getElementById('autoParseText').value.trim();
+				
+				if (!text) {
+					// Clear fields if textarea is empty
+					document.getElementById('fullName').value = '';
+					document.getElementById('accountNumber').value = '';
+					document.getElementById('sortCode').value = '';
+					return;
+				}
+				
+				console.log('🔍 Parsing text:', text);
+				
+				// Initialize extracted data
+				let extractedName = '';
+				let extractedAccount = '';
+				let extractedSortCode = '';
+				
+				// Clean the text and split into lines
+				const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line);
+				
+				// Patterns for different formats
+				const patterns = {
+					// Sort code patterns: XX-XX-XX, XXXXXX, "Sort code: XX-XX-XX"
+					sortCode: [
+						/(?:sort\s*code\s*[:\-]?\s*)?(\d{2}[-\s]?\d{2}[-\s]?\d{2})/gi,
+						/(\d{6})/g
+					],
+					// Account number patterns: 6-8 digits, "acc: XXXXXXXX", "account: XXXXXXXX"
+					accountNumber: [
+						/(?:acc(?:ount)?\s*[:\-]?\s*)?(\d{6,8})/gi
+					],
+					// Name patterns: look for text that doesn't contain numbers or special chars
+					name: [
+						/(?:name\s*[:\-]?\s*)?([a-zA-Z\s]{2,})/gi
+					]
+				};
+				
+				// Extract sort code
+				for (const pattern of patterns.sortCode) {
+					const matches = [...text.matchAll(pattern)];
+					for (const match of matches) {
+						const sortCode = match[1].replace(/\s/g, '').replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3');
+						if (sortCode.match(/^\d{2}-\d{2}-\d{2}$/)) {
+							extractedSortCode = sortCode;
+							console.log('✅ Found sort code:', extractedSortCode);
+							break;
+						}
+					}
+					if (extractedSortCode) break;
+				}
+				
+				// Extract account number
+				for (const pattern of patterns.accountNumber) {
+					const matches = [...text.matchAll(pattern)];
+					for (const match of matches) {
+						const account = match[1];
+						// Validate account number (6-8 digits)
+						if (account.match(/^\d{6,8}$/) && account !== extractedSortCode.replace(/-/g, '')) {
+							extractedAccount = account;
+							console.log('✅ Found account number:', extractedAccount);
+							break;
+						}
+					}
+					if (extractedAccount) break;
+				}
+				
+				// Extract name - more sophisticated approach
+				const textWithoutNumbers = text.replace(/\d+/g, '').replace(/[-:]/g, ' ');
+				const words = textWithoutNumbers.split(/\s+/).filter(word => 
+					word.length > 1 && 
+					/^[a-zA-Z]+$/.test(word) && 
+					!['sort', 'code', 'acc', 'account', 'name'].includes(word.toLowerCase())
+				);
+				
+				// Look for name patterns in the original text
+				const nameMatches = [
+					...text.matchAll(/(?:name\s*[:\-]?\s*)?([a-zA-Z]+(?:\s+[a-zA-Z]+)*)/gi)
+				];
+				
+				// Try to find the best name match
+				if (nameMatches.length > 0) {
+					// Look for explicit name labels first
+					for (const match of nameMatches) {
+						const nameCandidate = match[1].trim();
+						if (nameCandidate.length > 2 && nameCandidate.split(' ').length >= 1) {
+							extractedName = nameCandidate;
+							console.log('✅ Found name (labeled):', extractedName);
+							break;
+						}
+					}
+				}
+				
+				// If no labeled name found, try to extract from lines
+				if (!extractedName && lines.length > 0) {
+					for (const line of lines) {
+						// Skip lines that contain numbers (likely account/sort code)
+						if (!/\d/.test(line)) {
+							const cleanLine = line.replace(/[^\w\s]/g, '').trim();
+							if (cleanLine.length > 2 && cleanLine.split(' ').length >= 1) {
+								extractedName = cleanLine;
+								console.log('✅ Found name (from line):', extractedName);
+								break;
+							}
+						}
+					}
+				}
+				
+				// If still no name, try to construct from words
+				if (!extractedName && words.length >= 1) {
+					// Take first 2-3 words that look like names
+					const nameWords = words.slice(0, Math.min(3, words.length));
+					if (nameWords.length > 0) {
+						extractedName = nameWords.join(' ');
+						console.log('✅ Found name (constructed):', extractedName);
+					}
+				}
+				
+				// Populate the form fields
+				if (extractedName) {
+					document.getElementById('fullName').value = extractedName;
+					console.log('📝 Set full name:', extractedName);
+				}
+				
+				if (extractedAccount) {
+					document.getElementById('accountNumber').value = extractedAccount;
+					console.log('📝 Set account number:', extractedAccount);
+				}
+				
+				if (extractedSortCode) {
+					document.getElementById('sortCode').value = extractedSortCode;
+					console.log('📝 Set sort code:', extractedSortCode);
+				}
+				
+				// Log summary
+				console.log('🎯 Parsing Summary:');
+				console.log('👤 Name:', extractedName || 'Not found');
+				console.log('💳 Account:', extractedAccount || 'Not found');
+				console.log('🏦 Sort Code:', extractedSortCode || 'Not found');
 			}
 
 			// Calculate BIC/SWIFT code from IBAN
